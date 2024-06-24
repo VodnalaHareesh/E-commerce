@@ -1,9 +1,11 @@
 import axios from 'axios'
 import React, { useEffect,useState } from 'react'
 import './Home.css'
+import { useNavigate } from 'react-router-dom'
 export default function Home() {
     const [products,setProducts]=useState("")
     const [loading,setLoading]=useState(true)
+    const navigate=useNavigate()
     useEffect(()=>{
         getProducts()
     },[])
@@ -12,9 +14,29 @@ export default function Home() {
         setProducts(response.data)
         setLoading(false)
     }
-    function handleAddCart(){
-
+   async function handleAddCart(productId){
+    const userId=localStorage.getItem("userId")
+    if(!userId){
+      alert("Login first to add the product")
+      return;
     }
+    console.log(productId,userId)
+    try{
+      const responce=await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/cart/add`,{productId,quantity:1},{params:{userId}})
+      console.log(responce)
+      if(responce.status===200){
+        alert("product add successfully")
+        navigate('/cart')
+      }
+      else{
+        alert("not added successfully")
+      }
+    }
+    catch(error){
+      console.log(error)
+      alert("something went wrong!!")
+    }
+  }
     return (
         <div className='home-container'>
             {
@@ -31,7 +53,7 @@ export default function Home() {
                                     <p>{product.description}</p>
                                     <p>{product.category}</p>
                                     <p><b>Stock:</b>{product.stock}</p>
-                                    <button onClick={handleAddCart}>Add to cart</button>
+                                    <button onClick={()=>handleAddCart(product._id)}>Add to cart</button>
                                 </div>
                             ))
                         }
